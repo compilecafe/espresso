@@ -31,7 +31,7 @@ export async function awardXP({
     maxXP = 15,
     channelId,
     isBooster = false,
-    cooldownMs = 60_000,
+    cooldownMs = 5_000,
 }: AwardXPOptions) {
     const key = `${guildId}:${userId}`;
     const last = xpCooldowns.get(key) ?? 0;
