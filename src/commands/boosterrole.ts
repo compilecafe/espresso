@@ -13,20 +13,16 @@ export const data = new SlashCommandBuilder()
     .addStringOption((opt) => opt.setName("color").setDescription("Role color (#hex)").setRequired(true));
 
 export async function execute(interaction: ChatInputCommandInteraction) {
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+
     if (!interaction.guild) {
-        await interaction.reply({
-            content: "This command can only be used in a server.",
-            flags: MessageFlags.Ephemeral,
-        });
+        await interaction.editReply({ content: "This command can only be used in a server." });
         return;
     }
 
     const member = interaction.member as GuildMember;
     if (!member.premiumSince) {
-        await interaction.reply({
-            content: "You must be a server booster to use this command.",
-            flags: MessageFlags.Ephemeral,
-        });
+        await interaction.editReply({ content: "You must be a server booster to use this command." });
         return;
     }
 
@@ -37,15 +33,11 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     if (/^#?[0-9A-F]{6}$/i.test(colorInput)) {
         color = parseInt(colorInput.replace("#", ""), 16);
     } else {
-        await interaction.reply({
-            content: "Please provide a valid hex color (e.g. #FF00FF).",
-            flags: MessageFlags.Ephemeral,
-        });
+        await interaction.editReply({ content: "Please provide a valid hex color (e.g. #FF00FF)." });
         return;
     }
 
     const guild = interaction.guild;
-
     const row = await getUserBoosterRole(guild.id, member.id);
 
     let role;
@@ -74,8 +66,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         await member.roles.add(role);
     }
 
-    await interaction.reply({
+    await interaction.editReply({
         content: `Your booster role has been ${row ? "updated" : "created"}: <@&${role.id}>`,
-        flags: MessageFlags.Ephemeral,
     });
 }

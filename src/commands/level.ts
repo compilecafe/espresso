@@ -9,9 +9,14 @@ export const data = new SlashCommandBuilder()
     .addUserOption((option) => option.setName("user").setDescription("The user you want to check").setRequired(false));
 
 export async function execute(interaction: ChatInputCommandInteraction, _: BotClient): Promise<void> {
+    await interaction.deferReply();
+
     const targetUser = interaction.options.getUser("user") ?? interaction.user;
     if (!interaction.guild) {
-        await interaction.reply({ content: "Command ini hanya bisa digunakan di server.", ephemeral: true });
+        await interaction.reply({
+            content: "This command can only be used in a server",
+            flags: MessageFlags.Ephemeral,
+        });
         return;
     }
 
@@ -56,7 +61,7 @@ export async function execute(interaction: ChatInputCommandInteraction, _: BotCl
         )
         .setFooter({ text: `Next Level: ${nextLevel}` });
 
-    await interaction.reply({ embeds: [embed] });
+    await interaction.editReply({ embeds: [embed] });
 }
 
 export const command: SlashCommand = { data, execute };
