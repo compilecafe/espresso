@@ -1,6 +1,6 @@
 import { and, eq } from "drizzle-orm";
 import { db } from "~/database";
-import { boosterRolesTable, type InsertBoosterRole } from "~/database/schema";
+import { boosterRolesTable, guildSettingsTable, type InsertBoosterRole } from "~/database/schema";
 
 export async function getUserBoosterRole(guildId: string, userId: string) {
     const [role] = await db
@@ -22,4 +22,15 @@ export async function addUserBoosterRole(boosterRole: InsertBoosterRole) {
 
 export async function removeUserBoosterRole(id: string) {
     return (await db.delete(boosterRolesTable).where(eq(boosterRolesTable.id, id)).returning())[0] ?? null;
+}
+
+export async function getBoosterReferenceRole(guildId: string) {
+    const [role] = await db
+        .select({
+            roleId: guildSettingsTable.boosterReferenceRoleId,
+        })
+        .from(guildSettingsTable)
+        .where(eq(boosterRolesTable.guildId, guildId))
+        .limit(1);
+    return role?.roleId ?? null;
 }

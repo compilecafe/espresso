@@ -82,15 +82,15 @@ export async function sendLevelUpMessage(client: BotClient, guildId: string, use
 
     const setting = await getLevelingConfig(guildId);
 
-    if (!setting?.levelUpNotifications) return;
+    if (!setting?.isLevelingNotificationActive) return;
 
-    const channelId = setting.levelUpChannelId ?? member.guild.systemChannelId;
+    const channelId = setting.levelingNotificationChannelId ?? member.guild.systemChannelId;
     if (!channelId) return;
 
     const channel = guild.channels.cache.get(channelId);
     if (!channel || !channel.isTextBased()) return;
 
-    let message = setting.levelUpMessageTemplate ?? "{user}, you have reached level {level}!";
+    let message = setting.levelingNotificaitonTemplate;
     message = message.replace("{user}", `<@${userId}>`).replace("{level}", level.toString());
 
     (channel as TextChannel).send({ content: message });

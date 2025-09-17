@@ -54,11 +54,12 @@ export type InsertLevelingSpecialChannel = typeof levelingSpecialChannelsTable.$
 
 export const guildSettingsTable = pgTable("guild_settings", {
     guildId: varchar("guild_id", { length: 32 }).primaryKey(),
-    levelUpNotifications: boolean("level_up_notifications").notNull().default(true),
-    levelUpChannelId: varchar("level_up_channel_id", { length: 32 }),
-    levelUpMessageTemplate: varchar("level_up_message_template", { length: 255 }).default(
-        "{user}, you have reached level {level}!"
-    ),
+    isLevelingNotificationActive: boolean("is_leveling_notification_active").notNull().default(true),
+    levelingNotificationChannelId: varchar("leveling_notification_channel_id", { length: 32 }),
+    levelingNotificaitonTemplate: varchar("leveling_notificaiton_template", { length: 255 })
+        .notNull()
+        .default("{user}, you have reached level {level}!"),
+    boosterReferenceRoleId: varchar("booster_reference_role_id", { length: 32 }),
 });
 
 export type SelectGuildSetting = typeof guildSettingsTable.$inferSelect;

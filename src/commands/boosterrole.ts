@@ -1,7 +1,10 @@
 import { SlashCommandBuilder, ChatInputCommandInteraction, GuildMember, MessageFlags } from "discord.js";
-import { addUserBoosterRole, getUserBoosterRole, setUserBoosterRole } from "~/repositories/booster";
-
-const REFERENCE_ROLE_ID = "1415256947195641856";
+import {
+    addUserBoosterRole,
+    getBoosterReferenceRole,
+    getUserBoosterRole,
+    setUserBoosterRole,
+} from "~/repositories/booster";
 
 export const data = new SlashCommandBuilder()
     .setName("boosterrole")
@@ -42,15 +45,6 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     }
 
     const guild = interaction.guild;
-    const refRole = guild.roles.cache.get(REFERENCE_ROLE_ID);
-
-    if (!refRole) {
-        await interaction.reply({
-            content: "Reference role not found. Please check REFERENCE_ROLE_ID.",
-            flags: MessageFlags.Ephemeral,
-        });
-        return;
-    }
 
     const row = await getUserBoosterRole(guild.id, member.id);
 
@@ -68,7 +62,13 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         await addUserBoosterRole({ guildId: guild.id, userId: member.id, roleId: role.id });
     }
 
-    await role.setPosition(refRole.position - 1).catch(() => null);
+    const referenceRole = await getBoosterReferenceRole(interaction.guild.id);
+    if (referenceRole) {
+        const refRole = guild.roles.cache.get(referenceRole);
+        if (refRole) {
+            await role.setPosition(refRole.position - 1).catch(() => null);
+        }
+    }
 
     if (!member.roles.cache.has(role.id)) {
         await member.roles.add(role);

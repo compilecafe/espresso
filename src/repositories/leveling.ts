@@ -56,14 +56,7 @@ export async function removeVoiceSession(sessionId: string) {
 }
 
 export async function getLevelingConfig(guildId: string) {
-    const [setting] = await db
-        .select({
-            levelUpNotifications: guildSettingsTable.levelUpNotifications,
-            levelUpChannelId: guildSettingsTable.levelUpChannelId,
-            levelUpMessageTemplate: guildSettingsTable.levelUpMessageTemplate,
-        })
-        .from(guildSettingsTable)
-        .where(eq(guildSettingsTable.guildId, guildId));
+    const [setting] = await db.select().from(guildSettingsTable).where(eq(guildSettingsTable.guildId, guildId));
     return setting ?? null;
 }
 
