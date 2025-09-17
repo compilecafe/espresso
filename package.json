@@ -1,0 +1,27 @@
+{
+  "name": "espresso",
+  "module": "src/index.ts",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "bun src/index.ts",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "drizzle-kit": "^0.31.4"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@discordjs/rest": "^2.6.0",
+    "@paralleldrive/cuid2": "^2.2.2",
+    "discord-api-types": "^0.38.25",
+    "discord.js": "^14.22.1",
+    "dotenv": "^17.2.2",
+    "drizzle-orm": "^0.44.5",
+    "envalid": "^8.1.0"
+  }
+}
