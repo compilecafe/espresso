@@ -8,25 +8,31 @@ import {
     levelingVoiceSessionsTable,
     type InsertLevelingUserLevel,
     type InsertLevelingVoiceSession,
+    type SelectLevelingRole,
+    type SelectLevelingSetting,
+    type SelectLevelingSpecialChannel,
+    type SelectLevelingUserLevel,
+    type SelectLevelingVoiceSession,
 } from "~/database/schema";
 
-export async function setUserLevel(userLevel: Omit<Partial<InsertLevelingUserLevel>, "id">, id: string) {
-    return (
-        (
-            await db
-                .update(levelingUserLevelsTable)
-                .set(userLevel)
-                .where(eq(levelingUserLevelsTable.id, id))
-                .returning()
-        )[0] ?? null
-    );
+export async function setUserLevel(
+    userLevel: Omit<Partial<InsertLevelingUserLevel>, "id">,
+    id: string
+): Promise<SelectLevelingUserLevel | null> {
+    const [returning] = await db
+        .update(levelingUserLevelsTable)
+        .set(userLevel)
+        .where(eq(levelingUserLevelsTable.id, id))
+        .returning();
+    return returning ?? null;
 }
 
-export async function addUserLevel(userLevel: InsertLevelingUserLevel) {
-    return (await db.insert(levelingUserLevelsTable).values(userLevel).returning())[0] ?? null;
+export async function addUserLevel(userLevel: InsertLevelingUserLevel): Promise<SelectLevelingUserLevel | null> {
+    const [returning] = await db.insert(levelingUserLevelsTable).values(userLevel).returning();
+    return returning ?? null;
 }
 
-export async function getUserLevel(guildId: string, userId: string) {
+export async function getUserLevel(guildId: string, userId: string): Promise<SelectLevelingUserLevel | null> {
     const [level] = await db
         .select()
         .from(levelingUserLevelsTable)
@@ -34,11 +40,14 @@ export async function getUserLevel(guildId: string, userId: string) {
     return level ?? null;
 }
 
-export async function addVoiceSession(voiceSession: InsertLevelingVoiceSession) {
-    return (await db.insert(levelingVoiceSessionsTable).values(voiceSession).returning())[0] ?? null;
+export async function addVoiceSession(
+    voiceSession: InsertLevelingVoiceSession
+): Promise<SelectLevelingVoiceSession | null> {
+    const [returning] = await db.insert(levelingVoiceSessionsTable).values(voiceSession).returning();
+    return returning ?? null;
 }
 
-export async function getVoiceSession(guildId: string, userId: string) {
+export async function getVoiceSession(guildId: string, userId: string): Promise<SelectLevelingVoiceSession | null> {
     const [session] = await db
         .select()
         .from(levelingVoiceSessionsTable)
@@ -47,20 +56,32 @@ export async function getVoiceSession(guildId: string, userId: string) {
     return session ?? null;
 }
 
-export async function removeVoiceSession(sessionId: string) {
-    return (
-        (
-            await db.delete(levelingVoiceSessionsTable).where(eq(levelingVoiceSessionsTable.id, sessionId)).returning()
-        )[0] ?? null
-    );
+export async function removeVoiceSession(sessionId: string): Promise<SelectLevelingVoiceSession | null> {
+    const [returning] = await db
+        .delete(levelingVoiceSessionsTable)
+        .where(eq(levelingVoiceSessionsTable.id, sessionId))
+        .returning();
+    return returning ?? null;
 }
 
-export async function getLevelingConfig(guildId: string) {
-    const [setting] = await db.select().from(guildSettingsTable).where(eq(guildSettingsTable.guildId, guildId));
+export async function getLevelingConfig(guildId: string): Promise<SelectLevelingSetting | null> {
+    const [setting] = await db
+        .select({
+            isLevelingNotificationActive: guildSettingsTable.isLevelingNotificationActive,
+            levelingNotificationChannelId: guildSettingsTable.levelingNotificationChannelId,
+            levelingNotificaitonTemplate: guildSettingsTable.levelingNotificaitonTemplate,
+            levelingCooldownMs: guildSettingsTable.levelingCooldownMs,
+            levelingMinXpText: guildSettingsTable.levelingMinXpText,
+            levelingMaxXpText: guildSettingsTable.levelingMaxXpText,
+            levelingMinXpVoice: guildSettingsTable.levelingMinXpVoice,
+            levelingMaxXpVoice: guildSettingsTable.levelingMaxXpVoice,
+        })
+        .from(guildSettingsTable)
+        .where(eq(guildSettingsTable.guildId, guildId));
     return setting ?? null;
 }
 
-export async function getSpecialLevelingChannels(guildId: string) {
+export async function getSpecialLevelingChannels(guildId: string): Promise<SelectLevelingSpecialChannel[] | null> {
     const channels = await db
         .select()
         .from(levelingSpecialChannelsTable)
@@ -68,7 +89,10 @@ export async function getSpecialLevelingChannels(guildId: string) {
     return channels ?? null;
 }
 
-export async function getSpecialLevelingChannel(guildId: string, channelId: string) {
+export async function getSpecialLevelingChannel(
+    guildId: string,
+    channelId: string
+): Promise<SelectLevelingSpecialChannel | null> {
     const [channel] = await db
         .select()
         .from(levelingSpecialChannelsTable)
@@ -81,7 +105,7 @@ export async function getSpecialLevelingChannel(guildId: string, channelId: stri
     return channel ?? null;
 }
 
-export async function getLevelRole(guildId: string, level: number) {
+export async function getRoleForLevel(guildId: string, level: number): Promise<SelectLevelingRole | null> {
     const [role] = await db
         .select()
         .from(levelingRolesTable)

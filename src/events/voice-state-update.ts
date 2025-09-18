@@ -13,7 +13,9 @@ export const once = false;
 
 export async function execute(oldState: VoiceState, newState: VoiceState, client: BotClient) {
     const member = newState.member;
+
     if (!member || member.user.bot || !member.guild) return;
+
     const guildId = member.guild.id;
     const userId = member.id;
 
@@ -27,18 +29,13 @@ export async function execute(oldState: VoiceState, newState: VoiceState, client
             const durationMs = Date.now() - new Date(session.startTime).getTime();
             const durationMinutes = Math.floor(durationMs / 60000);
             if (durationMinutes > 0) {
-                const baseMin = durationMinutes * 1;
-                const baseMax = durationMinutes * 5;
-
                 await awardXP({
                     client,
                     guildId,
-                    userId,
+                    member,
                     channelId: oldChannelId,
-                    isBooster: !!member.premiumSince,
-                    cooldownMs: 0,
-                    minXP: baseMin,
-                    maxXP: baseMax,
+                    type: "voice",
+                    duration: durationMinutes,
                 });
             }
 
@@ -55,7 +52,6 @@ export async function execute(oldState: VoiceState, newState: VoiceState, client
             userId,
             guildId,
             channelId: newChannelId,
-            startTime: new Date(),
         });
     }
 }

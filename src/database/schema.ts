@@ -7,7 +7,8 @@ export const levelingUserLevelsTable = pgTable("leveling_user_levels", {
         .$defaultFn(() => createId()),
     userId: varchar("user_id", { length: 32 }).notNull(),
     guildId: varchar("guild_id", { length: 32 }).notNull(),
-    xp: integer("xp").notNull().default(0),
+    textXp: integer("text_xp").notNull().default(0),
+    voiceXp: integer("voice_xp").notNull().default(0),
     level: integer("level").notNull().default(0),
 });
 
@@ -21,7 +22,7 @@ export const levelingVoiceSessionsTable = pgTable("leveling_voice_sessions", {
     userId: varchar("user_id", { length: 32 }).notNull(),
     guildId: varchar("guild_id", { length: 32 }).notNull(),
     channelId: varchar("channel_id", { length: 32 }).notNull(),
-    startTime: timestamp("start_time").notNull(),
+    startTime: timestamp("start_time").notNull().defaultNow(),
 });
 
 export type SelectLevelingVoiceSession = typeof levelingVoiceSessionsTable.$inferSelect;
@@ -54,15 +55,34 @@ export type InsertLevelingSpecialChannel = typeof levelingSpecialChannelsTable.$
 
 export const guildSettingsTable = pgTable("guild_settings", {
     guildId: varchar("guild_id", { length: 32 }).primaryKey(),
+    // Leveling Settings
     isLevelingNotificationActive: boolean("is_leveling_notification_active").notNull().default(true),
     levelingNotificationChannelId: varchar("leveling_notification_channel_id", { length: 32 }),
     levelingNotificaitonTemplate: varchar("leveling_notificaiton_template", { length: 255 })
         .notNull()
         .default("{user}, you have reached level {level}!"),
+    levelingCooldownMs: integer("leveling_cooldown_ms").notNull().default(5_000),
+    levelingMinXpText: integer("leveling_min_xp_text").notNull().default(5),
+    levelingMaxXpText: integer("leveling_max_xp_text").notNull().default(15),
+    levelingMinXpVoice: integer("leveling_min_xp_voice").notNull().default(1),
+    levelingMaxXpVoice: integer("leveling_max_xp_voice").notNull().default(5),
+
+    // Booster Settings
     boosterReferenceRoleId: varchar("booster_reference_role_id", { length: 32 }),
 });
 
 export type SelectGuildSetting = typeof guildSettingsTable.$inferSelect;
+export type SelectLevelingSetting = Pick<
+    typeof guildSettingsTable.$inferSelect,
+    | "isLevelingNotificationActive"
+    | "levelingNotificationChannelId"
+    | "levelingNotificaitonTemplate"
+    | "levelingCooldownMs"
+    | "levelingMinXpText"
+    | "levelingMaxXpText"
+    | "levelingMinXpVoice"
+    | "levelingMaxXpVoice"
+>;
 export type InsertGuildSetting = typeof guildSettingsTable.$inferInsert;
 
 export const boosterRolesTable = pgTable("booster_roles", {

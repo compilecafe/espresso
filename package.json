@@ -5,6 +5,7 @@
   "private": true,
   "scripts": {
     "start": "bun src/index.ts",
+    "typecheck": "tsc --noEmit",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio"
   },

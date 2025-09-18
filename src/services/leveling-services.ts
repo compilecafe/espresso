@@ -1,70 +1,63 @@
-import { getLevelFromXP } from "~/utils/level";
+import { calculateXP, canGainXP, updateXP } from "~/utils/level";
 import {
     addUserLevel,
     getLevelingConfig,
-    getLevelRole,
+    getRoleForLevel,
     getSpecialLevelingChannel,
     getUserLevel,
     setUserLevel,
 } from "~/repositories/leveling";
 import type { BotClient } from "~/client";
-import type { TextChannel } from "discord.js";
+import type { GuildMember, TextChannel } from "discord.js";
 
-interface AwardXPOptions {
+interface AwardXPTextOptions {
     client: BotClient;
     guildId: string;
-    userId: string;
-    minXP?: number;
-    maxXP?: number;
+    member: GuildMember;
     channelId?: string;
-    isBooster?: boolean;
-    cooldownMs?: number;
+    type: "text";
 }
 
-const xpCooldowns: Map<string, number> = new Map();
+interface AwardXPVoiceOptions {
+    client: BotClient;
+    guildId: string;
+    member: GuildMember;
+    channelId?: string;
+    type: "voice";
+    duration: number;
+}
 
-export async function awardXP({
-    client,
-    guildId,
-    userId,
-    minXP = 5,
-    maxXP = 15,
-    channelId,
-    isBooster = false,
-    cooldownMs = 5_000,
-}: AwardXPOptions) {
-    const key = `${guildId}:${userId}`;
-    const last = xpCooldowns.get(key) ?? 0;
-    if (Date.now() - last < cooldownMs) return;
-    xpCooldowns.set(key, Date.now());
+export type AwardXPOptions = AwardXPTextOptions | AwardXPVoiceOptions;
 
-    let xpGained = Math.floor(Math.random() * (maxXP - minXP + 1)) + minXP;
+export async function awardXP(options: AwardXPOptions) {
+    const { client, guildId, member, channelId, type } = options;
 
-    if (channelId) {
-        const channelConfig = await getSpecialLevelingChannel(guildId, channelId);
-        if (channelConfig?.blacklisted) return;
-        if (channelConfig) {
-            xpGained = Math.floor(xpGained * (channelConfig.modifier / 100));
-        }
-    }
+    const userId = member.user.id;
+    const isBooster = !!member.premiumSince;
+
+    const setting = await getLevelingConfig(guildId);
+    if (!setting) return;
+
+    if (!canGainXP(guildId, userId, setting.levelingCooldownMs)) return;
+
+    let xpGained: number | null = calculateXP(options, setting);
+
+    xpGained = await applyChannelModifier(guildId, channelId, xpGained);
+    if (xpGained === null) return; // blacklisted channel
 
     if (isBooster) xpGained = Math.floor(xpGained * 1.1);
 
     const userRow = await getUserLevel(guildId, userId);
-    let currentXP = userRow?.xp ?? 0;
-    let currentLevel = userRow?.level ?? 0;
-
-    currentXP += xpGained;
-    const newLevel = getLevelFromXP(currentXP);
+    const { newTextXp, newVoiceXp, newLevel, leveledUp } = updateXP(userRow, type, xpGained);
 
     if (userRow) {
-        await setUserLevel({ xp: currentXP, level: newLevel }, userRow.id);
+        await setUserLevel({ textXp: newTextXp, voiceXp: newVoiceXp, level: newLevel }, userRow.id);
     } else {
-        await addUserLevel({ userId, guildId, xp: currentXP, level: newLevel });
+        await addUserLevel({ userId, guildId, textXp: newTextXp, voiceXp: newVoiceXp, level: newLevel });
     }
 
-    if (newLevel > currentLevel) {
-        const roleConfig = await getLevelRole(guildId, newLevel);
+    if (leveledUp) {
+        const roleConfig = await getRoleForLevel(guildId, newLevel);
         if (roleConfig) {
             const member = await client.guilds.cache.get(guildId)?.members.fetch(userId);
             await member?.roles.add(roleConfig.roleId);
@@ -94,4 +87,18 @@ export async function sendLevelUpMessage(client: BotClient, guildId: string, use
     message = message.replace("{user}", `<@${userId}>`).replace("{level}", level.toString());
 
     (channel as TextChannel).send({ content: message });
+}
+
+async function applyChannelModifier(
+    guildId: string,
+    channelId: string | undefined,
+    xp: number
+): Promise<number | null> {
+    if (!channelId) return xp;
+    const channelConfig = await getSpecialLevelingChannel(guildId, channelId);
+    if (channelConfig?.blacklisted) return null;
+    if (channelConfig) {
+        return Math.floor(xp * (channelConfig.modifier / 100));
+    }
+    return xp;
 }

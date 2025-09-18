@@ -12,6 +12,7 @@ export async function execute(interaction: ChatInputCommandInteraction, _: BotCl
     await interaction.deferReply();
 
     const targetUser = interaction.options.getUser("user") ?? interaction.user;
+
     if (!interaction.guild) {
         await interaction.reply({
             content: "This command can only be used in a server",
@@ -31,35 +32,59 @@ export async function execute(interaction: ChatInputCommandInteraction, _: BotCl
     }
 
     const currentLevel = userRow.level;
-    const currentXP = userRow.xp;
+    const textXp = userRow.textXp ?? 0;
+    const voiceXp = userRow.voiceXp ?? 0;
+    const totalXP = textXp + voiceXp;
 
     const nextLevel = currentLevel + 1;
     const xpForNextLevel = getXPForLevel(nextLevel);
-    const xpToNextLevel = xpForNextLevel - currentXP;
 
     const embed = new EmbedBuilder()
-        .setColor("#FF69B4")
-        .setAuthor({ name: targetUser.tag, iconURL: targetUser.displayAvatarURL() })
-        .setTitle(`Level ${currentLevel}`)
+        .setColor("#FF6AD5")
+        .setAuthor({
+            name: `${targetUser.username}'s Profile`,
+            iconURL: targetUser.displayAvatarURL(),
+        })
+        .setThumbnail(targetUser.displayAvatarURL())
+        .setDescription(`⭐ **Level ${currentLevel}**\n` + `➡️ Next: **Level ${nextLevel}**`)
         .addFields(
-            { name: "Current XP", value: `${currentXP}`, inline: true },
-            { name: "XP to Next Level", value: `${xpToNextLevel}`, inline: true },
             {
-                name: "Progress",
+                name: "📊 Progress",
                 value: (() => {
-                    const totalXP = currentXP + xpToNextLevel;
-                    const progress = currentXP / totalXP;
-                    const barLength = 20;
+                    const prevLevelXP = getXPForLevel(currentLevel);
+                    const xpThisLevel = totalXP - prevLevelXP;
+                    const neededThisLevel = xpForNextLevel - prevLevelXP;
+
+                    const progress = xpThisLevel / neededThisLevel;
+                    const barLength = 25;
                     const filledLength = Math.round(progress * barLength);
                     const bar = "▰".repeat(filledLength) + "▱".repeat(barLength - filledLength);
-                    return `${bar} \`${Math.round(progress * 100)}%\``;
+
+                    return `${bar}\n\`${xpThisLevel.toLocaleString()} / ${neededThisLevel.toLocaleString()} XP\` (${Math.round(
+                        progress * 100
+                    )}%)`;
                 })(),
+                inline: false,
+            },
+            {
+                name: "📝 Text XP",
+                value: `${textXp.toLocaleString()}`,
+                inline: true,
+            },
+            {
+                name: "🎤 Voice XP",
+                value: `${voiceXp.toLocaleString()}`,
+                inline: true,
+            },
+            {
+                name: "💯 Total XP",
+                value: `${totalXP.toLocaleString()}`,
+                inline: true,
             }
         )
-        .setThumbnail(
-            "https://cdn.discordapp.com/attachments/1397376270735511572/1417748450610511972/cute-pink.gif?ex=68cb9ca3&is=68ca4b23&hm=a32c37351334205a9887be40ce1cf07751732f849e3f7dbe6b44ec290c082c6c&"
-        )
-        .setFooter({ text: `Next Level: ${nextLevel}` });
+        .setFooter({
+            text: `Keep chatting and talking to level up!`,
+        });
 
     await interaction.editReply({ embeds: [embed] });
 }

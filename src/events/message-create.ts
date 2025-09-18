@@ -8,11 +8,12 @@ export const once = false;
 export async function execute(message: Message, client: BotClient) {
     if (message.author.bot || !message.guild) return;
 
-    await awardXP({
-        client,
-        guildId: message.guild.id,
-        userId: message.author.id,
-        channelId: message.channel.id,
-        isBooster: !!message.member?.premiumSince,
-    });
+    if (message.member)
+        await awardXP({
+            client,
+            member: message.member,
+            guildId: message.guild.id,
+            channelId: message.channel.id,
+            type: "text",
+        });
 }
