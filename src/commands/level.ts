@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder, MessageFlags } from "discord.js";
+import { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder } from "discord.js";
 import { BotClient, type SlashCommand } from "../client";
 import { getXPForLevel } from "~/utils/level";
 import { getUserLevel } from "~/repositories/leveling";
@@ -14,9 +14,8 @@ export async function execute(interaction: ChatInputCommandInteraction, _: BotCl
     const targetUser = interaction.options.getUser("user") ?? interaction.user;
 
     if (!interaction.guild) {
-        await interaction.reply({
+        await interaction.editReply({
             content: "This command can only be used in a server",
-            flags: MessageFlags.Ephemeral,
         });
         return;
     }
@@ -24,9 +23,9 @@ export async function execute(interaction: ChatInputCommandInteraction, _: BotCl
     const userRow = await getUserLevel(interaction.guild.id, targetUser.id);
 
     if (!userRow) {
-        await interaction.reply({
+        await interaction.editReply({
             content: `${targetUser} hasn’t earned any XP yet.`,
-            flags: MessageFlags.Ephemeral,
+            allowedMentions: { users: [] },
         });
         return;
     }
@@ -46,38 +45,38 @@ export async function execute(interaction: ChatInputCommandInteraction, _: BotCl
             iconURL: targetUser.displayAvatarURL(),
         })
         .setThumbnail(targetUser.displayAvatarURL())
-        .setDescription(`⭐ **Level ${currentLevel}**\n` + `➡️ Next: **Level ${nextLevel}**`)
+        .setDescription(`**Level ${currentLevel} → ${nextLevel}**`)
         .addFields(
             {
-                name: "📊 Progress",
+                name: "Progress",
                 value: (() => {
                     const prevLevelXP = getXPForLevel(currentLevel);
                     const xpThisLevel = totalXP - prevLevelXP;
                     const neededThisLevel = xpForNextLevel - prevLevelXP;
 
                     const progress = xpThisLevel / neededThisLevel;
-                    const barLength = 25;
+                    const barLength = 14;
                     const filledLength = Math.round(progress * barLength);
                     const bar = "▰".repeat(filledLength) + "▱".repeat(barLength - filledLength);
 
-                    return `${bar}\n\`${xpThisLevel.toLocaleString()} / ${neededThisLevel.toLocaleString()} XP\` (${Math.round(
+                    return `${bar} \`${xpThisLevel.toLocaleString()} / ${neededThisLevel.toLocaleString()} XP (${Math.round(
                         progress * 100
-                    )}%)`;
+                    )}%)\``;
                 })(),
                 inline: false,
             },
             {
-                name: "📝 Text XP",
+                name: "Text XP",
                 value: `${textXp.toLocaleString()}`,
                 inline: true,
             },
             {
-                name: "🎤 Voice XP",
+                name: "Voice XP",
                 value: `${voiceXp.toLocaleString()}`,
                 inline: true,
             },
             {
-                name: "💯 Total XP",
+                name: "Total XP",
                 value: `${totalXP.toLocaleString()}`,
                 inline: true,
             }
