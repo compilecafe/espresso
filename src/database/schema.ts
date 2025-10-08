@@ -69,6 +69,10 @@ export const guildSettingsTable = pgTable("guild_settings", {
 
     // Booster Settings
     boosterReferenceRoleId: varchar("booster_reference_role_id", { length: 32 }),
+
+    // Auto Role Settings
+    autoRoleUserRoleId: varchar("auto_role_user_role_id", { length: 32 }),
+    autoRoleBotRoleId: varchar("auto_role_bot_role_id", { length: 32 }),
 });
 
 export type SelectGuildSetting = typeof guildSettingsTable.$inferSelect;
@@ -82,6 +86,11 @@ export type SelectLevelingSetting = Pick<
     | "levelingMaxXpText"
     | "levelingMinXpVoice"
     | "levelingMaxXpVoice"
+>;
+export type SelectBoosterSetting = Pick<typeof guildSettingsTable.$inferSelect, "boosterReferenceRoleId">;
+export type SelectAutoRoleSetting = Pick<
+    typeof guildSettingsTable.$inferSelect,
+    "autoRoleUserRoleId" | "autoRoleBotRoleId"
 >;
 export type InsertGuildSetting = typeof guildSettingsTable.$inferInsert;
 
