@@ -1,6 +1,6 @@
 import { Events, GuildMember } from "discord.js";
 import { BotClient } from "../client";
-import { handleBoosterStopped } from "~/services/booster-services";
+import { handleBoosterStopped } from "~/services/booster-service";
 
 export const name = Events.GuildMemberUpdate;
 export const once = false;

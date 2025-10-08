@@ -69,6 +69,9 @@ export const guildSettingsTable = pgTable("guild_settings", {
 
     // Booster Settings
     boosterReferenceRoleId: varchar("booster_reference_role_id", { length: 32 }),
+
+    // Log settings
+    
 });
 
 export type SelectGuildSetting = typeof guildSettingsTable.$inferSelect;

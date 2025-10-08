@@ -1,6 +1,6 @@
 import { Events, Message } from "discord.js";
 import type { BotClient } from "~/client";
-import { awardXP } from "~/services/leveling-services";
+import { awardXP } from "~/services/leveling-service";
 
 export const name = Events.MessageCreate;
 export const once = false;

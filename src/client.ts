@@ -6,6 +6,7 @@ import {
     ChatInputCommandInteraction,
     type SlashCommandOptionsOnlyBuilder,
     type SlashCommandSubcommandsOnlyBuilder,
+    Partials,
 } from "discord.js";
 
 export type SlashCommandData =
@@ -23,7 +24,16 @@ export class BotClient extends Client {
 
     constructor() {
         super({
-            intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages],
+            intents: [
+                GatewayIntentBits.Guilds,
+                GatewayIntentBits.GuildMembers,
+                GatewayIntentBits.GuildMessages,
+                GatewayIntentBits.GuildVoiceStates,
+                GatewayIntentBits.GuildModeration,
+                GatewayIntentBits.GuildExpressions,
+                GatewayIntentBits.MessageContent,
+            ],
+            partials: [Partials.Message, Partials.Channel, Partials.Reaction, Partials.GuildMember, Partials.User],
         });
     }
 }

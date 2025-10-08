@@ -6,7 +6,7 @@ import {
     getVoiceSession,
     removeVoiceSession,
 } from "~/repositories/leveling";
-import { awardXP } from "~/services/leveling-services";
+import { awardXP } from "~/services/leveling-service";
 
 export const name = Events.VoiceStateUpdate;
 export const once = false;
