@@ -54,7 +54,7 @@ export async function execute(interaction: ChatInputCommandInteraction, _: BotCl
                     const xpThisLevel = totalXP - prevLevelXP;
                     const neededThisLevel = xpForNextLevel - prevLevelXP;
 
-                    const progress = xpThisLevel / neededThisLevel;
+                    const progress = Math.max(0, Math.min(xpThisLevel / neededThisLevel, 1));
                     const barLength = 14;
                     const filledLength = Math.round(progress * barLength);
                     const bar = "▰".repeat(filledLength) + "▱".repeat(barLength - filledLength);

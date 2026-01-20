@@ -15,10 +15,16 @@ export async function execute(interaction: Interaction, client: BotClient): Prom
     } catch (error) {
         console.error(error);
         if (interaction.isRepliable()) {
-            await interaction.reply({
-                content: "There was an error executing this command!",
-                flags: MessageFlags.Ephemeral,
-            });
+            if (interaction.deferred || interaction.replied) {
+                await interaction.editReply({
+                    content: "There was an error executing this command!",
+                });
+            } else {
+                await interaction.reply({
+                    content: "There was an error executing this command!",
+                    flags: MessageFlags.Ephemeral,
+                });
+            }
         }
     }
 }
