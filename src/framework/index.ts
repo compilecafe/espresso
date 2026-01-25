@@ -7,3 +7,5 @@ export { CommandError, assertGuild, assertMember } from "./errors";
 export { compose, type Middleware } from "./middleware";
 export { randomInt, formatNumber, truncate, sleep, parseHexColor } from "./utils";
 export type { CommandContext, CommandDefinition, EventDefinition, Guard, BaristaConfig, AwardXPOptions, XPType } from "./types";
+
+export { Events, GatewayIntentBits } from "discord.js";

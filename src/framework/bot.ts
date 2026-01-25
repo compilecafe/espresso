@@ -1,4 +1,4 @@
-import { Client, Collection, GatewayIntentBits, REST, Routes, MessageFlags } from "discord.js";
+import { Client, Collection, Events, GatewayIntentBits, REST, Routes, MessageFlags } from "discord.js";
 import { createContext } from "./context";
 import { CommandError } from "./errors";
 import { loadCommands, loadEvents } from "./loader";
@@ -79,7 +79,7 @@ export class Barista {
         await this.loadAllEvents();
         this.setupInteractionHandler();
 
-        this.client.once("ready", async () => {
+        this.client.once(Events.ClientReady, async () => {
             console.log(`☕ Barista is ready! Logged in as ${this.client.user?.tag}`);
             for (const callback of this.onReadyCallbacks) {
                 await callback(this.client);

@@ -1,7 +1,7 @@
-import { event } from "~/framework";
+import { event, Events } from "~/framework";
 import { awardXP } from "~/services/leveling";
 
-export default event("messageCreate")
+export default event(Events.MessageCreate)
     .execute(async (message, client) => {
         if (message.author.bot || !message.guild || !message.member) return;
 

@@ -92,10 +92,10 @@ export default command("settings", "Configure bot settings")
 ### Creating Events
 
 ```typescript
-// Simple event
-import { event } from "~/framework";
+// Simple event using Events enum (recommended)
+import { event, Events } from "~/framework";
 
-export default event("ready")
+export default event(Events.ClientReady)
     .runOnce()
     .execute(async (client) => {
         console.log(`Logged in as ${client.user?.tag}`);
@@ -104,9 +104,9 @@ export default event("ready")
 
 ```typescript
 // Message event
-import { event } from "~/framework";
+import { event, Events } from "~/framework";
 
-export default event("messageCreate")
+export default event(Events.MessageCreate)
     .execute(async (message, client) => {
         if (message.content === "hello") {
             await message.reply("Hello!");

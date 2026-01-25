@@ -1,7 +1,7 @@
-import { event } from "~/framework";
+import { event, Events } from "~/framework";
 import { initGuildSettings } from "~/repositories/guild-settings";
 
-export default event("ready")
+export default event(Events.ClientReady)
     .runOnce()
     .execute(async (client) => {
         console.log(`☕ Bot ready as ${client.user?.tag}`);

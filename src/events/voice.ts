@@ -1,5 +1,5 @@
 import type { Client } from "discord.js";
-import { event } from "~/framework";
+import { event, Events } from "~/framework";
 import {
     addVoiceSession,
     getSpecialLevelingChannel,
@@ -8,7 +8,7 @@ import {
 } from "~/repositories/leveling";
 import { awardXP } from "~/services/leveling";
 
-export default event("voiceStateUpdate")
+export default event(Events.VoiceStateUpdate)
     .execute(async (oldState, newState, client) => {
         const member = newState.member;
         if (!member || member.user.bot || !member.guild) return;
