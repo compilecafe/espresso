@@ -4,179 +4,278 @@ A multi-purpose Discord bot made by the [Compile Café](https://discord.gg/ExCvJ
 
 ## Barista Framework
 
-Espresso uses **Barista**, a custom Discord.js wrapper that makes bot development intuitive and enjoyable.
+Barista is an opinionated, batteries-included Discord.js wrapper. It provides a clean, intuitive API for building Discord bots with minimal boilerplate.
 
 ### Features
 
-- **Fluent Builder API** - Chain methods to define commands and events
-- **Auto-Discovery** - Commands and events are automatically loaded from directories
-- **Built-in Guards** - Permission checks like `guildOnly`, `boosterOnly`, `adminOnly`
-- **Subcommand Support** - Define complex commands with nested subcommands
-- **Plugin System** - Extend functionality with reusable plugins
-- **Rich Context** - Helper methods like `ctx.success()`, `ctx.error()`, `ctx.embed()`
-- **Type-Safe** - Full TypeScript support with strict types
+- **🏗️ Structure** - Organized `app/`, `config/`, `database/` directories
+- **⚡ Fluent Command Builder** - Chain methods to define commands intuitively
+- **📡 Event System** - Simple event handlers with Discord.js Events enum
+- **🛡️ Built-in Guards** - Permission checks like `guildOnly`, `adminOnly`, `cooldown`
+- **💉 Dependency Injection** - Service container for managing dependencies
+- **🔌 Plugin System** - Extend functionality with reusable plugins
+- **📝 Beautiful Logging** - Colorful console output
+- **🎯 Type-Safe** - Full TypeScript support with strict types
+- **🔧 Zero Config** - Auto-discovery of commands and events
 
-### Quick Start
+## Quick Start
 
 ```typescript
 // src/index.ts
 import "dotenv/config";
-import path from "path";
-import { Barista } from "~/framework";
-import { env } from "~/utils/env";
+import { createApp } from "./bootstrap";
 
-const bot = Barista.create({
-    token: env.DISCORD_TOKEN,
-    clientId: env.CLIENT_ID,
-    intents: [
-        Barista.intents.guilds,
-        Barista.intents.messages,
-        Barista.intents.members,
-        Barista.intents.voice,
-    ],
-})
-    .withCommands(path.join(__dirname, "commands"))
-    .withEvents(path.join(__dirname, "events"));
-
-await bot.start();
+const app = createApp();
+await app.start();
 ```
 
-### Creating Commands
+```typescript
+// src/bootstrap.ts
+import { Barista } from "~/framework";
+import { config } from "~/config/bot";
+import path from "path";
+
+export function createApp(): Barista {
+    return Barista.create({
+        token: config.DISCORD_TOKEN,
+        clientId: config.CLIENT_ID,
+        debug: config.DEBUG,
+        intents: [
+            Barista.intents.guilds,
+            Barista.intents.messages,
+            Barista.intents.members,
+            Barista.intents.voice,
+        ],
+    })
+        .commands(path.join(__dirname, "app/commands"))
+        .events(path.join(__dirname, "app/events"));
+}
+```
+
+## Project Structure
+
+```
+src/
+├── app/                          # Application code
+│   ├── commands/                 # Slash commands
+│   │   ├── ping.ts
+│   │   ├── level.ts
+│   │   ├── boosterrole.ts
+│   │   └── settings.ts
+│   ├── events/                   # Event handlers
+│   │   ├── ready.ts
+│   │   ├── guild-create.ts
+│   │   ├── member-add.ts
+│   │   ├── member-remove.ts
+│   │   ├── member-update.ts
+│   │   ├── message-create.ts
+│   │   └── voice-state-update.ts
+│   ├── services/                 # Business logic
+│   │   ├── leveling-service.ts
+│   │   ├── booster-service.ts
+│   │   └── auto-role-service.ts
+│   └── repositories/             # Data access
+│       ├── guild-repository.ts
+│       ├── leveling-repository.ts
+│       └── booster-repository.ts
+├── config/                       # Configuration
+│   ├── bot.ts                    # Bot settings
+│   └── database.ts               # Database connection
+├── database/                     # Database layer
+│   └── schema/                   # Drizzle schema
+│       └── schema.ts
+├── framework/                    # Barista framework
+│   ├── core/                     # Core classes
+│   │   ├── barista.ts            # Main bot class
+│   │   ├── container.ts          # DI container
+│   │   ├── loader.ts             # Auto-discovery
+│   │   └── logger.ts             # Logging utility
+│   ├── commands/                 # Command system
+│   │   ├── command-builder.ts    # Fluent builder
+│   │   └── context.ts            # Command context
+│   ├── events/                   # Event system
+│   │   └── event-builder.ts      # Event builder
+│   ├── support/                  # Utilities
+│   │   ├── guards.ts             # Permission guards
+│   │   ├── errors.ts             # Error classes
+│   │   └── helpers.ts            # Helper functions
+│   ├── types.ts                  # TypeScript types
+│   └── index.ts                  # Barrel exports
+├── bootstrap.ts                  # App bootstrap
+└── index.ts                      # Entry point
+```
+
+## Creating Commands
 
 ```typescript
 // Simple command
 import { command } from "~/framework";
 
-export default command("ping", "Replies with Pong!")
-    .execute(async (ctx) => {
-        await ctx.reply("Pong!");
-    });
+export default command("ping", "Check if the bot is responsive").execute(
+  async (ctx) => {
+    await ctx.success(`Pong! Latency: ${ctx.client.ws.ping}ms`);
+  }
+);
 ```
 
 ```typescript
 // Command with options and guards
-import { command, guildOnly } from "~/framework";
+import { command, guildOnly, EmbedBuilder } from "~/framework";
 
 export default command("level", "Check your level")
-    .user("user", "The user to check")
-    .guard(guildOnly)
-    .execute(async (ctx) => {
-        const user = ctx.getUser("user") ?? ctx.user;
-        await ctx.success(`Checking level for ${user.username}`);
-    });
+  .user("user", "The user to check")
+  .guard(guildOnly)
+  .execute(async (ctx) => {
+    await ctx.defer();
+    const target = ctx.getUser("user") ?? ctx.user;
+
+    await ctx.embed(
+      new EmbedBuilder()
+        .setTitle(`${target.username}'s Level`)
+        .setDescription("Level 10")
+    );
+  });
 ```
 
 ```typescript
 // Command with subcommands
-import { command, adminOnly } from "~/framework";
+import { command, adminOnly, guildOnly } from "~/framework";
 
 export default command("settings", "Configure bot settings")
-    .guard(adminOnly)
-    .subcommand("leveling", "Leveling settings", (sub) =>
-        sub
-            .channel("channel", "Notification channel")
-            .boolean("enabled", "Enable notifications")
-            .execute(async (ctx) => {
-                await ctx.success("Leveling settings updated!");
-            })
-    )
-    .subcommand("autorole", "Auto-role settings", (sub) =>
-        sub
-            .role("role", "Role to assign")
-            .execute(async (ctx) => {
-                await ctx.success("Auto-role configured!");
-            })
-    );
+  .guard(guildOnly, adminOnly)
+  .subcommand("leveling", "Configure leveling", (sub) =>
+    sub
+      .channel("channel", "Notification channel")
+      .boolean("enabled", "Enable notifications")
+      .execute(async (ctx) => {
+        await ctx.success("Settings updated!");
+      })
+  )
+  .subcommand("autorole", "Configure auto-role", (sub) =>
+    sub.role("role", "Role to assign").execute(async (ctx) => {
+      await ctx.success("Auto-role configured!");
+    })
+  );
 ```
 
-### Creating Events
+## Creating Events
 
 ```typescript
-// Simple event using Events enum (recommended)
-import { event, Events } from "~/framework";
+import { event, Events, logger } from "~/framework";
 
 export default event(Events.ClientReady)
-    .runOnce()
-    .execute(async (client) => {
-        console.log(`Logged in as ${client.user?.tag}`);
-    });
+  .runOnce()
+  .execute(async (client) => {
+    logger.success(`Logged in as ${client.user.tag}`);
+  });
 ```
 
 ```typescript
-// Message event
 import { event, Events } from "~/framework";
 
-export default event(Events.MessageCreate)
-    .execute(async (message, client) => {
-        if (message.content === "hello") {
-            await message.reply("Hello!");
-        }
-    });
+export default event(Events.MessageCreate).execute(async (message, client) => {
+  if (message.content === "!hello") {
+    await message.reply("Hello!");
+  }
+});
 ```
 
-### Command Context
+## Command Context
 
-The `CommandContext` provides helpful methods:
+| Method                    | Description                  |
+| ------------------------- | ---------------------------- |
+| `ctx.reply(content)`      | Reply to interaction         |
+| `ctx.defer(ephemeral?)`   | Defer the reply              |
+| `ctx.success(message)`    | Reply with success message   |
+| `ctx.error(message)`      | Reply with error (ephemeral) |
+| `ctx.info(message)`       | Reply with info message      |
+| `ctx.warn(message)`       | Reply with warning message   |
+| `ctx.embed(builder)`      | Reply with embed             |
+| `ctx.getString(name)`     | Get string option            |
+| `ctx.getUser(name)`       | Get user option              |
+| `ctx.getMember(name)`     | Get member option            |
+| `ctx.getNumber(name)`     | Get number option            |
+| `ctx.getInteger(name)`    | Get integer option           |
+| `ctx.getBoolean(name)`    | Get boolean option           |
+| `ctx.getRole(name)`       | Get role option              |
+| `ctx.getChannel(name)`    | Get channel option           |
+| `ctx.getAttachment(name)` | Get attachment option        |
+| `ctx.getSubcommand()`     | Get subcommand name          |
 
-| Method | Description |
-|--------|-------------|
-| `ctx.reply(content)` | Reply to the interaction |
-| `ctx.defer(ephemeral?)` | Defer the reply |
-| `ctx.followUp(content)` | Send a follow-up message |
-| `ctx.success(message)` | Reply with ✅ prefix |
-| `ctx.error(message)` | Reply with ❌ prefix (ephemeral) |
-| `ctx.embed(builder)` | Reply with an embed |
-| `ctx.getString(name)` | Get string option value |
-| `ctx.getUser(name)` | Get user option value |
-| `ctx.getNumber(name)` | Get number option value |
-| `ctx.getBoolean(name)` | Get boolean option value |
-| `ctx.getRole(name)` | Get role option value |
-| `ctx.getChannel(name)` | Get channel option value |
-| `ctx.getSubcommand()` | Get current subcommand name |
-
-### Built-in Guards
+## Built-in Guards
 
 ```typescript
-import { guildOnly, boosterOnly, adminOnly, hasRole, cooldown } from "~/framework";
+import {
+    guildOnly,      // Must be in a server
+    adminOnly,      // Must be administrator
+    boosterOnly,    // Must be server booster
+    ownerOnly,      // Must be bot owner
+    hasRole,        // Must have specific role
+    hasPermission,  // Must have permission
+    cooldown,       // Rate limiting
+    nsfw,           // NSFW channel only
+} from "~/framework";
 
-command("example", "Example command")
-    .guard(guildOnly)                    // Must be used in a server
-    .guard(boosterOnly)                  // Must be a server booster
-    .guard(adminOnly)                    // Must have administrator permission
-    .guard(hasRole("123456789"))         // Must have specific role
-    .guard(cooldown(5000))               // 5 second cooldown
+command("example", "Example")
+    .guard(guildOnly)
+    .guard(adminOnly)
+    .guard(cooldown(5000))  // 5 second cooldown
     .execute(async (ctx) => { ... });
 ```
 
-### Plugin System
+## Logger
 
 ```typescript
-import { Barista, type Plugin } from "~/framework";
+import { logger } from "~/framework";
 
-const loggingPlugin: Plugin = {
-    name: "logging",
+logger.info("Information message");
+logger.success("Success message");
+logger.warn("Warning message");
+logger.error("Error message");
+logger.debug("Debug message");
+logger.ready("Bot is ready!");
+logger.command("ping");
+logger.event("messageCreate");
+logger.database("Connected to database");
+logger.box("Title", "Message in a box");
+```
+
+## Helper Functions
+
+```typescript
+import {
+  randomInt, // Random integer between min and max
+  formatNumber, // Format number with commas
+  truncate, // Truncate string with ellipsis
+  sleep, // Async sleep
+  parseHexColor, // Parse hex color to number
+  capitalize, // Capitalize first letter
+  pluralize, // Pluralize word
+  formatDuration, // Format milliseconds to human readable
+  chunk, // Split array into chunks
+  pick, // Pick keys from object
+  omit, // Omit keys from object
+} from "~/framework";
+```
+
+## Plugin System
+
+```typescript
+import { Barista, type Plugin, logger } from "~/framework";
+
+const analyticsPlugin: Plugin = {
+    name: "analytics",
+    version: "1.0.0",
     setup: (barista) => {
-        barista.onError((error, commandName) => {
-            console.error(`Error in ${commandName}:`, error);
+        barista.onError((error, command) => {
+            // Send to analytics service
         });
     },
 };
 
 Barista.create({ ... })
-    .use(loggingPlugin)
+    .use(analyticsPlugin)
     .start();
-```
-
-### Utilities
-
-```typescript
-import { parseHexColor, randomInt, formatNumber, truncate, sleep } from "~/framework";
-
-parseHexColor("#FF00FF");     // 16711935
-randomInt(1, 100);            // Random number 1-100
-formatNumber(1234567);        // "1,234,567"
-truncate("Long text...", 10); // "Long te..."
-await sleep(1000);            // Wait 1 second
 ```
 
 ## Setup
@@ -188,51 +287,43 @@ git clone https://github.com/compilecafe/espresso.git
 cd espresso
 ```
 
-### 2. Copy environment file
+### 2. Install dependencies
+
+```bash
+bun install
+```
+
+### 3. Configure environment
 
 ```bash
 cp .env.example .env
 ```
 
-Edit `.env` with your Discord bot token and client ID.
+Edit `.env`:
 
-### 3. Run the bot
-
-**Using Docker (recommended)**
-
-```bash
-docker compose up --build -d
+```env
+DISCORD_TOKEN=your_bot_token
+CLIENT_ID=your_client_id
+DATABASE_URL=postgres://...
+DEBUG=false
 ```
 
-**Without Docker**
+### 4. Run database migrations
 
 ```bash
-bun install
+bun run db:push
+```
+
+### 5. Start the bot
+
+```bash
 bun start
 ```
 
-## Project Structure
+## Docker
 
-```
-src/
-├── framework/          # Barista framework
-│   ├── bot.ts          # Main bot class
-│   ├── command.ts      # Command builder
-│   ├── event.ts        # Event builder
-│   ├── guards.ts       # Permission guards
-│   ├── context.ts      # Command context
-│   ├── container.ts    # Dependency injection
-│   ├── errors.ts       # Error utilities
-│   ├── middleware.ts   # Middleware support
-│   ├── loader.ts       # Auto-discovery
-│   ├── utils.ts        # Utilities
-│   └── types.ts        # TypeScript types
-├── commands/           # Slash commands
-├── events/             # Event handlers
-├── services/           # Business logic
-├── repositories/       # Database access
-├── database/           # Database schema
-└── index.ts            # Entry point
+```bash
+docker compose up --build -d
 ```
 
 ## Contributing

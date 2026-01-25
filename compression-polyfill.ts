@@ -19,12 +19,14 @@ const transformMap = {
     gzip: zlib.createGzip,
 };
 
-globalThis.CompressionStream ??= class CompressionStream {
-    readable;
-    writable;
-    constructor(format: "deflate" | "deflate-raw" | "gzip") {
-        const handle = transformMap[format]();
-        this.readable = Readable.toWeb(handle);
-        this.writable = Writable.toWeb(handle);
-    }
-};
+if (!globalThis.CompressionStream) {
+    (globalThis as unknown as { CompressionStream: unknown }).CompressionStream = class CompressionStream {
+        readable;
+        writable;
+        constructor(format: "deflate" | "deflate-raw" | "gzip") {
+            const handle = transformMap[format]();
+            this.readable = Readable.toWeb(handle);
+            this.writable = Writable.toWeb(handle);
+        }
+    };
+}

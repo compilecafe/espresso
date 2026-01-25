@@ -1,11 +1,60 @@
-export { Barista, type Plugin } from "./bot";
-export { command, SubcommandBuilder } from "./command";
-export { event } from "./event";
-export { guildOnly, boosterOnly, adminOnly, hasRole, cooldown } from "./guards";
-export { container, Container } from "./container";
-export { CommandError, assertGuild, assertMember } from "./errors";
-export { compose, type Middleware } from "./middleware";
-export { randomInt, formatNumber, truncate, sleep, parseHexColor } from "./utils";
-export type { CommandContext, CommandDefinition, EventDefinition, Guard, BaristaConfig, AwardXPOptions, XPType } from "./types";
+export { Barista, type Plugin, type BaristaOptions } from "./core/barista";
+export { logger, type Logger } from "./core/logger";
+export { container, Container } from "./core/container";
 
-export { Events, GatewayIntentBits } from "discord.js";
+export { command, CommandBuilder, SubcommandBuilder } from "./commands/command-builder";
+export { createContext } from "./commands/context";
+
+export { event, EventBuilder } from "./events/event-builder";
+
+export {
+    guildOnly,
+    boosterOnly,
+    adminOnly,
+    ownerOnly,
+    hasRole,
+    hasPermission,
+    cooldown,
+    nsfw,
+} from "./support/guards";
+
+export {
+    BaristaError,
+    CommandError,
+    ValidationError,
+    DatabaseError,
+    assertDefined,
+    assertGuild,
+    assertMember,
+} from "./support/errors";
+
+export {
+    randomInt,
+    formatNumber,
+    truncate,
+    sleep,
+    parseHexColor,
+    capitalize,
+    pluralize,
+    formatDuration,
+    chunk,
+    pick,
+    omit,
+} from "./support/helpers";
+
+export type {
+    CommandContext,
+    CommandDefinition,
+    CommandHandler,
+    CommandOption,
+    EventDefinition,
+    EventHandler,
+    EventName,
+    Guard,
+    BaristaConfig,
+    OptionType,
+    AwardXPOptions,
+    XPType,
+} from "./types";
+
+export { Events, GatewayIntentBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder, StringSelectMenuBuilder } from "discord.js";
