@@ -1,13 +1,7 @@
-import { BotClient } from "~/client";
 import fs from "fs";
 import path from "path";
-import { type ClientEvents } from "discord.js";
-
-interface EventModule<K extends keyof ClientEvents = keyof ClientEvents> {
-    name: K;
-    once?: boolean;
-    execute: (...args: [...ClientEvents[K], BotClient]) => Promise<void> | void;
-}
+import type { BotClient } from "~/client";
+import type { EventModule } from "~/types";
 
 export async function loadEvents(client: BotClient): Promise<void> {
     const eventsPath = path.join(__dirname, "../events");

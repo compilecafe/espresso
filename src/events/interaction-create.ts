@@ -1,5 +1,5 @@
 import { Events, MessageFlags, type Interaction } from "discord.js";
-import { BotClient } from "~/client";
+import type { BotClient } from "~/client";
 
 export const name = Events.InteractionCreate;
 export const once = false;
@@ -14,17 +14,12 @@ export async function execute(interaction: Interaction, client: BotClient): Prom
         await command.execute(interaction, client);
     } catch (error) {
         console.error(error);
-        if (interaction.isRepliable()) {
-            if (interaction.deferred || interaction.replied) {
-                await interaction.editReply({
-                    content: "There was an error executing this command!",
-                });
-            } else {
-                await interaction.reply({
-                    content: "There was an error executing this command!",
-                    flags: MessageFlags.Ephemeral,
-                });
-            }
+        const content = "There was an error executing this command!";
+
+        if (interaction.deferred || interaction.replied) {
+            await interaction.editReply({ content });
+        } else if (interaction.isRepliable()) {
+            await interaction.reply({ content, flags: MessageFlags.Ephemeral });
         }
     }
 }

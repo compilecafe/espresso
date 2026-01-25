@@ -1,19 +1,21 @@
-import { Events, Message } from "discord.js";
+import { Events, type Message } from "discord.js";
 import type { BotClient } from "~/client";
-import { awardXP } from "~/services/leveling-services";
+import { awardXP } from "~/services/leveling";
 
 export const name = Events.MessageCreate;
 export const once = false;
 
-export async function execute(message: Message, client: BotClient) {
-    if (message.author.bot || !message.guild) return;
+export async function execute(message: Message, client: BotClient): Promise<void> {
+    if (message.author.bot || !message.guild || !message.member) return;
 
-    if (message.member)
-        await awardXP({
+    await awardXP(
+        {
             client,
-            member: message.member,
             guildId: message.guild.id,
+            userId: message.member.id,
             channelId: message.channel.id,
             type: "text",
-        });
+        },
+        !!message.member.premiumSince
+    );
 }

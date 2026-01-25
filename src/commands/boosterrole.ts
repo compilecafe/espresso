@@ -1,10 +1,13 @@
-import { SlashCommandBuilder, ChatInputCommandInteraction, GuildMember, MessageFlags } from "discord.js";
+import { SlashCommandBuilder, type ChatInputCommandInteraction, type GuildMember, MessageFlags } from "discord.js";
 import {
     addUserBoosterRole,
     getBoosterReferenceRole,
     getUserBoosterRole,
     setUserBoosterRole,
 } from "~/repositories/booster";
+import type { SlashCommand } from "~/types";
+
+const HEX_COLOR_REGEX = /^#?[0-9A-F]{6}$/i;
 
 export const data = new SlashCommandBuilder()
     .setName("boosterrole")
@@ -12,7 +15,7 @@ export const data = new SlashCommandBuilder()
     .addStringOption((opt) => opt.setName("name").setDescription("Role name").setRequired(true))
     .addStringOption((opt) => opt.setName("color").setDescription("Role color (#hex)").setRequired(true));
 
-export async function execute(interaction: ChatInputCommandInteraction) {
+export async function execute(interaction: ChatInputCommandInteraction): Promise<void> {
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     if (!interaction.guild) {
@@ -29,14 +32,12 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     const name = interaction.options.getString("name", true);
     const colorInput = interaction.options.getString("color", true);
 
-    let color: number;
-    if (/^#?[0-9A-F]{6}$/i.test(colorInput)) {
-        color = parseInt(colorInput.replace("#", ""), 16);
-    } else {
+    if (!HEX_COLOR_REGEX.test(colorInput)) {
         await interaction.editReply({ content: "Please provide a valid hex color (e.g. #FF00FF)." });
         return;
     }
 
+    const color = parseInt(colorInput.replace("#", ""), 16);
     const guild = interaction.guild;
     const row = await getUserBoosterRole(guild.id, member.id);
 
@@ -54,9 +55,9 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         await addUserBoosterRole({ guildId: guild.id, userId: member.id, roleId: role.id });
     }
 
-    const referenceRole = await getBoosterReferenceRole(interaction.guild.id);
-    if (referenceRole) {
-        const refRole = guild.roles.cache.get(referenceRole);
+    const referenceRoleId = await getBoosterReferenceRole(guild.id);
+    if (referenceRoleId) {
+        const refRole = guild.roles.cache.get(referenceRoleId);
         if (refRole) {
             await role.setPosition(refRole.position - 1).catch(() => null);
         }
@@ -70,3 +71,5 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         content: `Your booster role has been ${row ? "updated" : "created"}: <@&${role.id}>`,
     });
 }
+
+export default { data, execute } satisfies SlashCommand;

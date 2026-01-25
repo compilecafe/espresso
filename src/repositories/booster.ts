@@ -25,12 +25,10 @@ export async function removeUserBoosterRole(id: string) {
 }
 
 export async function getBoosterReferenceRole(guildId: string) {
-    const [role] = await db
-        .select({
-            roleId: guildSettingsTable.boosterReferenceRoleId,
-        })
+    const [setting] = await db
+        .select({ roleId: guildSettingsTable.boosterReferenceRoleId })
         .from(guildSettingsTable)
-        .where(eq(boosterRolesTable.guildId, guildId))
+        .where(eq(guildSettingsTable.guildId, guildId))
         .limit(1);
-    return role?.roleId ?? null;
+    return setting?.roleId ?? null;
 }

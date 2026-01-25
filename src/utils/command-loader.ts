@@ -1,7 +1,8 @@
-import { BotClient, type SlashCommand } from "~/client";
 import { REST, Routes } from "discord.js";
 import fs from "fs";
 import path from "path";
+import type { BotClient } from "~/client";
+import type { SlashCommand } from "~/types";
 import { env } from "~/utils/env";
 
 export async function loadCommands(client: BotClient): Promise<void> {
@@ -24,8 +25,8 @@ export async function loadCommands(client: BotClient): Promise<void> {
 
     await traverse(commandsPath);
 
-    const rest = new REST({ version: "10" }).setToken(env.DISCORD_TOKEN!);
-    await rest.put(Routes.applicationCommands(env.CLIENT_ID!), { body: commandsJSON });
+    const rest = new REST({ version: "10" }).setToken(env.DISCORD_TOKEN);
+    await rest.put(Routes.applicationCommands(env.CLIENT_ID), { body: commandsJSON });
 
     console.log(`Loaded ${client.commands.size} commands.`);
 }

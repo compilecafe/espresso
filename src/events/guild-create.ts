@@ -1,11 +1,10 @@
-import { Events, Guild } from "discord.js";
-import { BotClient } from "~/client";
+import { Events, type Guild } from "discord.js";
 import { initGuildSettings } from "~/repositories/guild-settings";
 
 export const name = Events.GuildCreate;
 export const once = false;
 
-export async function execute(guild: Guild, _: BotClient): Promise<void> {
+export async function execute(guild: Guild): Promise<void> {
     console.log(`Joined new guild: ${guild.name} (${guild.id})`);
 
     try {

@@ -1,7 +1,7 @@
 import type { SelectLevelingSetting, SelectLevelingUserLevel } from "~/database/schema";
-import type { AwardXPOptions } from "~/services/leveling-services";
+import type { AwardXPOptions, XPType } from "~/types";
 
-const xpCooldowns: Map<string, number> = new Map();
+const xpCooldowns = new Map<string, number>();
 
 export function getLevelFromXP(xp: number): number {
     let level = 0;
@@ -21,7 +21,7 @@ export function getXPForLevel(level: number): number {
     return xp;
 }
 
-export function updateXP(userRow: SelectLevelingUserLevel | null, type: "text" | "voice", xpGained: number) {
+export function updateXP(userRow: SelectLevelingUserLevel | null, type: XPType, xpGained: number) {
     let newTextXp = userRow?.textXp ?? 0;
     let newVoiceXp = userRow?.voiceXp ?? 0;
 
@@ -49,16 +49,13 @@ export function canGainXP(guildId: string, userId: string, cooldownMs: number): 
 }
 
 export function calculateXP(options: AwardXPOptions, setting: SelectLevelingSetting): number {
-    let minXP: number;
-    let maxXP: number;
-
     if (options.type === "text") {
-        minXP = setting.levelingMinXpText;
-        maxXP = setting.levelingMaxXpText;
-    } else {
-        minXP = options.duration * setting.levelingMinXpVoice;
-        maxXP = options.duration * setting.levelingMaxXpVoice;
+        const minXP = setting.levelingMinXpText;
+        const maxXP = setting.levelingMaxXpText;
+        return Math.floor(Math.random() * (maxXP - minXP + 1)) + minXP;
     }
 
+    const minXP = options.duration * setting.levelingMinXpVoice;
+    const maxXP = options.duration * setting.levelingMaxXpVoice;
     return Math.floor(Math.random() * (maxXP - minXP + 1)) + minXP;
 }
