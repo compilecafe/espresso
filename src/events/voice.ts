@@ -1,5 +1,5 @@
-import { Events, type VoiceState } from "discord.js";
-import type { BotClient } from "~/client";
+import type { Client } from "discord.js";
+import { event } from "~/framework";
 import {
     addVoiceSession,
     getSpecialLevelingChannel,
@@ -8,29 +8,27 @@ import {
 } from "~/repositories/leveling";
 import { awardXP } from "~/services/leveling";
 
-export const name = Events.VoiceStateUpdate;
-export const once = false;
+export default event("voiceStateUpdate")
+    .execute(async (oldState, newState, client) => {
+        const member = newState.member;
+        if (!member || member.user.bot || !member.guild) return;
 
-export async function execute(oldState: VoiceState, newState: VoiceState, client: BotClient): Promise<void> {
-    const member = newState.member;
-    if (!member || member.user.bot || !member.guild) return;
+        const guildId = member.guild.id;
+        const userId = member.id;
+        const oldChannelId = oldState.channelId;
+        const newChannelId = newState.channelId;
 
-    const guildId = member.guild.id;
-    const userId = member.id;
-    const oldChannelId = oldState.channelId;
-    const newChannelId = newState.channelId;
+        if (oldChannelId && oldChannelId !== newChannelId) {
+            await handleVoiceLeave(client, guildId, userId, oldChannelId, !!member.premiumSince);
+        }
 
-    if (oldChannelId && oldChannelId !== newChannelId) {
-        await handleVoiceLeave(client, guildId, userId, oldChannelId, !!member.premiumSince);
-    }
-
-    if (newChannelId) {
-        await handleVoiceJoin(guildId, userId, newChannelId);
-    }
-}
+        if (newChannelId) {
+            await handleVoiceJoin(guildId, userId, newChannelId);
+        }
+    });
 
 async function handleVoiceLeave(
-    client: BotClient,
+    client: Client,
     guildId: string,
     userId: string,
     channelId: string,

@@ -1,5 +1,5 @@
 import type { SelectLevelingSetting, SelectLevelingUserLevel } from "~/database/schema";
-import type { AwardXPOptions, XPType } from "~/types";
+import type { AwardXPOptions, XPType } from "~/framework";
 
 const xpCooldowns = new Map<string, number>();
 

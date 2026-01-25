@@ -1,5 +1,4 @@
-import type { TextChannel } from "discord.js";
-import type { BotClient } from "~/client";
+import type { Client, TextChannel } from "discord.js";
 import {
     addUserLevel,
     getLevelingConfig,
@@ -8,7 +7,7 @@ import {
     getUserLevel,
     setUserLevel,
 } from "~/repositories/leveling";
-import type { AwardXPOptions } from "~/types";
+import type { AwardXPOptions } from "~/framework";
 import { calculateXP, canGainXP, updateXP } from "~/utils/level";
 
 export async function awardXP(options: AwardXPOptions, isBooster: boolean = false): Promise<void> {
@@ -40,7 +39,7 @@ export async function awardXP(options: AwardXPOptions, isBooster: boolean = fals
     }
 }
 
-async function handleLevelUp(client: BotClient, guildId: string, userId: string, level: number): Promise<void> {
+async function handleLevelUp(client: Client, guildId: string, userId: string, level: number): Promise<void> {
     const roleConfig = await getRoleForLevel(guildId, level);
     if (roleConfig) {
         const member = await client.guilds.cache.get(guildId)?.members.fetch(userId);
@@ -50,7 +49,7 @@ async function handleLevelUp(client: BotClient, guildId: string, userId: string,
 }
 
 async function sendLevelUpMessage(
-    client: BotClient,
+    client: Client,
     guildId: string,
     userId: string,
     level: number

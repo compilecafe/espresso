@@ -1,37 +1,28 @@
-import { SlashCommandBuilder, type ChatInputCommandInteraction, EmbedBuilder } from "discord.js";
+import { EmbedBuilder } from "discord.js";
+import { command, guildOnly } from "~/framework";
 import { getUserLevel } from "~/repositories/leveling";
-import type { SlashCommand } from "~/types";
 import { getXPForLevel } from "~/utils/level";
 
-export const data = new SlashCommandBuilder()
-    .setName("level")
-    .setDescription("Check your level and XP or someone else's")
-    .addUserOption((option) =>
-        option.setName("user").setDescription("The user you want to check").setRequired(false)
-    );
+export default command("level", "Check your level and XP or someone else's")
+    .user("user", "The user you want to check")
+    .guard(guildOnly)
+    .execute(async (ctx) => {
+        await ctx.defer();
 
-export async function execute(interaction: ChatInputCommandInteraction): Promise<void> {
-    await interaction.deferReply();
+        const targetUser = ctx.getUser("user") ?? ctx.user;
+        const userRow = await getUserLevel(ctx.guild!.id, targetUser.id);
 
-    if (!interaction.guild) {
-        await interaction.editReply({ content: "This command can only be used in a server" });
-        return;
-    }
+        if (!userRow) {
+            await ctx.reply({
+                content: `${targetUser} hasn't earned any XP yet.`,
+                allowedMentions: { users: [] },
+            });
+            return;
+        }
 
-    const targetUser = interaction.options.getUser("user") ?? interaction.user;
-    const userRow = await getUserLevel(interaction.guild.id, targetUser.id);
-
-    if (!userRow) {
-        await interaction.editReply({
-            content: `${targetUser} hasn't earned any XP yet.`,
-            allowedMentions: { users: [] },
-        });
-        return;
-    }
-
-    const embed = buildLevelEmbed(targetUser, userRow);
-    await interaction.editReply({ embeds: [embed] });
-}
+        const embed = buildLevelEmbed(targetUser, userRow);
+        await ctx.reply({ embeds: [embed] });
+    });
 
 function buildLevelEmbed(
     user: { username: string; displayAvatarURL: () => string },
@@ -68,5 +59,3 @@ function buildLevelEmbed(
         )
         .setFooter({ text: "Keep chatting and talking to level up!" });
 }
-
-export default { data, execute } satisfies SlashCommand;
