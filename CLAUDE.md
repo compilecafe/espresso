@@ -26,8 +26,3 @@ Use Bun instead of npm, pnpm, or yarn.
   - Dependency patterns
 - Place new code only in logically correct locations based on the existing structure.
 - Do not introduce new patterns unless strictly necessary.
-- Always use **Context7 MCP** when:
-  - Accessing library or API documentation
-  - Generating code that depends on third-party libraries
-  - Providing setup, installation, or configuration steps
-- Do this automatically without requiring explicit user instruction.
